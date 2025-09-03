@@ -1,6 +1,6 @@
 from behave import given, when, then
 from pages.base_page import BasePage
-from utils.config import BASE_URL
+from config import BASE_URL
 
 @given("que el usuario abre el navegador")
 def step_open_browser(context):
