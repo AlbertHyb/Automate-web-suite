@@ -22,6 +22,12 @@ class ApiHelper:
                     response = requests.post(url, data=data, headers=headers)
                 else:
                     response = requests.post(url, json=data, headers=headers)
+            elif method.upper() == "PUT":
+                if use_form_data:
+                    headers = {**headers, "Content-Type": "application/x-www-form-urlencoded"}
+                    response = requests.put(url, data=data, headers=headers)
+                else:
+                    response = requests.put(url, json=data, headers=headers)
             else:
                 response = requests.get(url, params=data, headers=headers)
             return response

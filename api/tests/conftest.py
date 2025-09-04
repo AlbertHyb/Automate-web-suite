@@ -3,6 +3,7 @@ import pytest
 from config.settings import Config
 from api.api_helper import ApiHelper
 import datetime
+import requests
 
 # Configuración
 config = Config()
@@ -60,11 +61,44 @@ def admin_token() -> str:
     except Exception as e:
         pytest.fail(f"Error al obtener el token de admin: {str(e)}")
 
-@pytest.fixture
-def test_user():
+@pytest.fixture(scope="function")
+def test_user(api_client):
+    """Crea un usuario de prueba único y retorna su user_id y token."""
+    import time
+    signup_data = Config.get_signup_status_data()
+    unique_email = f"test_user_{int(time.time() * 1000)}@gmail.com"
+    signup_data["email"] = unique_email
+    response = api_client.make_request(
+        endpoint="auth/signup",
+        method="POST",
+        data=signup_data
+    )
+    assert response.status_code in (200, 201), f"No se pudo crear usuario de prueba. Respuesta: {response.text}"
+    user_id = response.json().get("uid")
+    # Login para obtener el token
+    login_data = {
+        "username": unique_email,
+        "grant_type": "password",
+        "password": signup_data["password"],
+        "scope": "read write",
+        "client_id": "test_client",
+        "client_secret": "test_secret"
+    }
+
+    login_response = api_client.make_request(
+        endpoint="auth/login",
+        method="POST",
+        data=login_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        use_form_data=True
+    )
+    assert login_response.status_code == 200, f"No se pudo hacer login del usuario de prueba. Respuesta: {login_response.text}"
+    token = login_response.json().get("access_token")
     return {
-        "email": "testuser@example.com",
-        "password": "testpassword"
+        "uid": user_id,
+        "token": token,
+        "email": unique_email,
+        "password": signup_data["password"]
     }
 
 @pytest.fixture(scope="session")
