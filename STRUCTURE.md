@@ -1,35 +1,44 @@
-# Estructura real del proyecto
+# Estructura del proyecto API Testing
 
+```
 Automate-web-suite/
-├── api/                    # Lógica y helpers de API
-│   ├── api_helper.py       # Helper para requests a la API
-│   ├── schemas/            # Esquemas JSON para validación
-│   └── tests/              # Pruebas automatizadas de API
-│       ├── auth_login.py
-│       ├── auth_signup.py
-│       ├── conftest.py     # Fixtures y configuración de tests de API
-│       └── ...
+├── api/                    # Pruebas y lógica de API
+│   ├── api_helper.py       # Helper para requests HTTP
+│   ├── schemas/            # Esquemas para validación de respuestas
+│   │   ├── login_schemas.py
+│   │   ├── signup_schemas.py
+│   │   ├── user_schemas.py
+│   │   └── ...
+│   └── tests/              # Tests de API organizados por funcionalidad
+│       ├── conftest.py     # Fixtures principales para API
+│       ├── auth/           # Tests de autenticación
+│       │   ├── auth_login.py
+│       │   └── auth_signup.py
+│       ├── users/          # Tests de usuarios
+│       │   ├── user_create.py
+│       │   ├── user_delete.py
+│       │   └── user_update.py
+│       └── airports/       # Tests de aeropuertos
 ├── config/                 # Configuración centralizada
-│   ├── settings.py         # Configuración y carga de variables de entorno
-│   ├── config.py
-│   ├── constants.py
-│   └── settings.json
-├── features/               # Pruebas BDD (Gherkin, Behave)
-│   ├── environment.py
-│   ├── login.feature
-│   └── steps/
-├── pages/                  # Page Objects para pruebas de UI
-│   └── base_page.py
-├── utils/                  # Utilidades generales (drivers, helpers)
-│   └── driver_factory.py
-├── reports/                # Reportes generados por pytest
-├── Reportes/               # (Carpeta alternativa de reportes, revisar uso)
-├── requirements.txt        # Dependencias del proyecto
-├── README.md               # Documentación principal
-├── STRUCTURE.md            # Estructura del proyecto (este archivo)
-├── pytest.ini              # Configuración de pytest
-├── .env                    # Variables de entorno (no subir)
-└── ...otros archivos
+│   ├── settings.py         # Variables de entorno y configuración
+│   ├── constants.py        # Constantes del proyecto
+│   └── config.py          # Configuración adicional
+├── features/               # Tests BDD con Behave
+│   ├── environment.py      # Configuración de Behave
+│   ├── *.feature          # Archivos Gherkin
+│   └── steps/             # Implementación de steps
+├── reports/                # Reportes generados
+├── utils/                  # Utilidades compartidas
+│   └── driver_factory.py  # Solo si usas UI testing
+├── .env                    # Variables de entorno (no versionar)
+├── pytest.ini             # Configuración de pytest
+├── requirements.txt        # Dependencias
+└── README.md              # Documentación
+```
 
-> Nota: Esta estructura refleja el estado actual del proyecto y puede diferir de la sugerida inicialmente. Toda la configuración se centraliza en `config/settings.py` y las pruebas de API están en `api/tests/`.
+## Principios de esta estructura:
 
+1. **Separación clara**: API tests, BDD tests, y configuración separados
+2. **No duplicación**: Una sola ubicación para cada tipo de archivo
+3. **Escalabilidad**: Fácil agregar nuevos tests por módulos
+4. **Mantenibilidad**: Configuración centralizada en `config/`

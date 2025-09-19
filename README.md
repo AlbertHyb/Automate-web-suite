@@ -119,7 +119,7 @@ Automate-web-suite/
 pytest api/tests/ -v
 ```
 
-#### Pruebas específicas:
+### Pruebas específicas:
 ```bash
 # Autenticación
 pytest api/tests/auth_login.py -v
@@ -130,7 +130,7 @@ pytest api/tests/user_update_put.py -v
 pytest api/tests/user_me_get.py -v
 
 # Aeropuertos
-pytest api/tests/test_airports.py -v
+pytest api/tests/list_airports.py -v
 ```
 
 #### Generar reporte HTML:

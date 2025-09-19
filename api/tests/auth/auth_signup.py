@@ -24,13 +24,17 @@ def signup_service_status(api_client):
             data=signup_data
         )
         print(f"Status Code: {response.status_code}")
+
         try:
             print(f"Response: {response.json()}")
-        except Exception:
+        except Exception as e:
             print(f"Response: {response.text}")
+            print("El servicio API no está disponible en este momento")
+            print(f"Error: {e}")
     except Exception as e:
-        print("El servicio API no está disponible en este momento")
+        print("Error al conectar con el servicio API en el fixture signup_service_status")
         print(f"Error: {e}")
+
 
 def test_user_registration_successful(api_client):
     """Test para verificar el registro exitoso de un usuario"""
@@ -62,7 +66,6 @@ def test_user_registration_successful(api_client):
         print(f"Response JSON: {response.json()}")
     except:
         print("La respuesta no es JSON válido")
-
 
     response_data = response.json()
 

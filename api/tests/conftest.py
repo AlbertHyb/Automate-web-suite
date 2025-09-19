@@ -4,11 +4,35 @@ from config.settings import Config
 from api.api_helper import ApiHelper
 import datetime
 import requests
+import time
+from http import HTTPStatus
+import logging
+from datetime import datetime
+from api.tests.airports.list_airports import fetch_data
 
 # Configuración
 config = Config()
 
 BASE_URL = "https://cf-automation-airline-api.onrender.com"
+
+# Configuración global de logging para todos los tests
+# Usar ruta absoluta para la carpeta logs en la raíz del proyecto
+log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../logs'))
+os.makedirs(log_dir, exist_ok=True)
+log_filename = os.path.join(log_dir, 'error.log')
+
+logging.basicConfig(
+    level=logging.INFO,  # Guardar todos los niveles: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    filename=log_filename,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+print(f"Ruta absoluta del log: {log_filename}")
+#logger.debug("Mensaje de prueba DEBUG: validando creación de error.log en la ruta configurada.")
+logger.info("Mensaje de prueba INFO: validando creación de error.log en la ruta configurada.")
+logger.warning("Mensaje de prueba WARNING: validando creación de error.log en la ruta configurada.")
+logger.error("Mensaje de prueba ERROR: validando creación de error.log en la ruta configurada.")
+logger.critical("Mensaje de prueba CRITICAL: validando creación de error.log en la ruta configurada.")
 
 @pytest.fixture(scope="session")
 def base_url() -> str:
@@ -123,11 +147,59 @@ def ensure_test_user(base_url, test_user):
         print(f"Error al registrar usuario de prueba: {response.status_code} {response.text}")
     yield
 
+@pytest.fixture
+def auth_signup(api_client):
+    """Crea un usuario de prueba y retorna sus datos y token."""
+    timestamp = int(time.time())
+    email = f"fernandohz{timestamp}@gmail.com"
+    password = "Cafe&Libro456?"
+    full_name = "Fernando Hernandez"
+    test_data = {
+        "email": email,
+        "password": password,
+        "full_name": full_name
+    }
+    # Crear usuario
+    signup_resp = api_client.make_request(
+        method="POST",
+        endpoint="auth/signup",
+        data=test_data
+    )
+    assert signup_resp.status_code == HTTPStatus.CREATED
+    user_id = signup_resp.json().get("id")
+
+    # Login para obtener el token
+    login_data = {
+        "username": email,
+        "password": password,
+        "grant_type": "password",
+        "scope": "read write",
+        "client_id": "test_client",
+        "client_secret": "test_secret"
+    }
+    login_resp = api_client.make_request(
+        method="POST",
+        endpoint="auth/login",
+        data=login_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        use_form_data=True
+    )
+    assert login_resp.status_code == HTTPStatus.OK
+    access_token = login_resp.json().get("access_token")
+
+    return {
+        "user_id": user_id,
+        "access_token": access_token,
+        "email": email,
+        "password": password,
+        "full_name": full_name
+    }
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     """Hook para generar reportes específicos cuando hay fallos"""
     failed = bool(terminalreporter.stats.get("failed"))
     if failed:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         report_path = f"reports/failures_{timestamp}.html"
 
         # Re-ejecutar las pruebas fallidas con reporte detallado
@@ -138,3 +210,57 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             "--showlocals",
             "--last-failed"
         ])
+
+@pytest.fixture
+def static_airport():
+    return {
+        "id": 1,
+        "name": "John F. Kennedy International Airport",
+        "code": "JFK",
+        "city": "New York",
+        "country": "USA",
+        "latitude": 40.6413,
+        "longitude": -73.7781,
+        "created_at": "2023-01-01T00:00:00Z",
+        "updated_at": "2023-01-01T00:00:00Z"
+    }
+
+@pytest.fixture
+def auth_headers(admin_token):
+    return {
+        "Authorization": f"Bearer {admin_token}",
+        "Content-Type": "application/json"
+    }
+
+
+
+
+@pytest.fixture(scope="module")
+def airport_test_data(api_client):
+    """
+    Fixture que proporciona datos de aeropuertos para las pruebas.
+    Obtiene la lista de aeropuertos existentes y crea casos de prueba para validación.
+    """
+    # Obtener lista de aeropuertos
+    list_response = fetch_data(skip=0, limit=30, api_client=api_client)
+
+    if list_response.status_code != 200:
+        pytest.skip("No se pudo obtener la lista de aeropuertos para las pruebas")
+
+    airports = list_response.json()
+
+    if not airports or len(airports) == 0:
+        pytest.skip("No hay aeropuertos disponibles para las pruebas")
+
+    # Registrar algunos aeropuertos disponibles para referencia
+    logger.info(f"Aeropuertos disponibles para pruebas: {[a['iata_code'] for a in airports[:5]]}")
+
+    # Crear un código IATA que definitivamente no existe
+    invalid_iata = "ZZZ" if "ZZZ" not in [a["iata_code"] for a in airports] else "XXX"
+
+    # Devolver los datos para las pruebas
+    return {
+        "airports": airports,
+        "valid_iata": airports[0]["iata_code"],
+        "invalid_iata": invalid_iata
+    }

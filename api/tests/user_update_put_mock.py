@@ -1,14 +1,16 @@
-"""
-Test alternativo usando mocks para validar la lógica mientras la API está caída
-Ejecutar: pytest api/tests/user_update_put_mock.py -v
-"""
-
 import pytest
 from unittest.mock import Mock, patch
 from http import HTTPStatus
 from jsonschema import validate, ValidationError
 from api.api_helper import ApiHelper
 from api.schemas.user_update_put_schema import user_update_put_schema
+
+
+"""
+Test alternativo usando mocks para validar la lógica mientras la API está caída
+Ejecutar: pytest api/tests/user_update_put_mock.py -v
+"""
+
 
 class TestUpdateUserMock:
     """Suite de pruebas MOCK para el endpoint PUT /users/{user_id}"""
@@ -67,7 +69,7 @@ class TestUpdateUserMock:
         assert body["email"] == update_data["email"]
         assert body["full_name"] == update_data["full_name"]
 
-        print("✅ Test mock exitoso - La lógica del test es correcta")
+        print("Test mock exitoso - La lógica del test es correcta")
 
     @patch('api.api_helper.requests.put')
     def test_update_user_forbidden_mock(self, mock_put):
@@ -99,7 +101,7 @@ class TestUpdateUserMock:
         assert response.status_code == 403
         assert "Forbidden" in response.text
 
-        print("✅ Test de error 403 exitoso - El manejo de errores es correcto")
+        print("Test de error 403 exitoso - El manejo de errores es correcto")
 
 if __name__ == "__main__":
     # Ejecutar los tests directamente

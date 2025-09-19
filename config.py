@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from api.api_helper import ApiHelper
 import datetime
 
-# Cargar variables de entorno
 load_dotenv()
 
 BASE_URL = "https://cf-automation-airline-api.onrender.com"
@@ -79,3 +78,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             "--showlocals",
             "--last-failed"
         ])
+
+
+
+
