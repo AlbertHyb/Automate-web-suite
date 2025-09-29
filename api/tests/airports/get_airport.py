@@ -1,6 +1,4 @@
 import pytest
-import requests
-import json
 import logging
 
 logging.basicConfig(

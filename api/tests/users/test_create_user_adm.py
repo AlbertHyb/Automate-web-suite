@@ -2,7 +2,7 @@ import json
 import pytest
 from http import HTTPStatus
 from jsonschema import validate, ValidationError
-from test.api.schemas.create_user_adm_schemas import create_user_adm_success_schema, create_user_adm_error_schema
+from api.schemas.create_user_adm_schemas import create_user_adm_success_schema, create_user_adm_error_schema
 
 # Datos constantes para usuario admin de prueba
 TEST_ADMIN_DATA = {
