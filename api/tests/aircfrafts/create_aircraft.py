@@ -21,12 +21,10 @@ def generate_random_tail_number():
 
 def create_aircraft_request(aircraft_data, api_client, auth_headers=None):
     """Helper para crear aviones usando el Page Object Model.
-
     Args:
         aircraft_data: Datos del avión (tail_number, model, capacity)
         api_client: Instancia de ApiHelper
         auth_headers: Headers de autenticación adicionales
-
     Returns:
         requests.Response: Respuesta de la API
     """

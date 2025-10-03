@@ -8,7 +8,6 @@ class AircraftPage:
     """Para operaciones de aviones.
     Centraliza todas las operaciones relacionadas con el endpoint /aircrafts
     """
-
     def __init__(self, api_client):
         self.api_client = api_client
         self.endpoint = "aircrafts"
