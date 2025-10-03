@@ -4,42 +4,21 @@ import traceback
 import json
 import requests
 import pytest
+from api.pages.aircraft_page import AircraftPage
 
 logger = logging.getLogger(__name__)
 
-class AircraftPage:
-    """Wrapper de endpoint /aircrafts para operaciones de consulta por filtros.
+# --- Helper para operaciones de consulta por ID ---
 
-    La API (según otros tests) permite listar aviones vía GET /aircrafts con
-    parámetros (p.ej. skip, limit). Aquí reutilizamos ese patrón para obtener
-    un listado filtrado (ej. por model o tail_number) y posteriormente
-    identificar un id específico.
-    """
-    def __init__(self, api_client):
-        self.api_client = api_client
-        self.endpoint = "aircrafts"
+def get_aircraft_by_id_request(aircraft_id, api_client, auth_headers=None):
+    """Obtiene un avión por su ID usando el Page Object Model.
 
-    def get_aircraft_by_id(self, aircraft_id, headers):
-        """Realiza GET /aircrafts/{aircraft_id}."""
-        endpoint_full = f"{self.endpoint}/{aircraft_id}"
-        return self.api_client.make_request(
-            method="GET",
-            endpoint=endpoint_full,
-            data=None,
-            headers=headers
-        )
+    Args:
+      aircraft_id (str|int): identificador del avión
+      api_client: instancia de ApiHelper
+      auth_headers: headers de autenticación adicionales
 
-# --- Helper principal (nueva semántica: obtener por ID) ---
-
-def id_aircraft_request(aircraft_id, api_client, auth_headers=None):
-    """Obtiene un avión por su ID usando GET /aircrafts/{aircraft_id}.
-
-    Parametros:
-      aircraft_id (str|int): identificador retornado por la creación del avión.
-      api_client: instancia de ApiHelper.
-      auth_headers: headers de autenticación adicionales.
-
-    Retorna:
+    Returns:
       requests.Response
 
     Códigos esperados típicos:
@@ -49,7 +28,8 @@ def id_aircraft_request(aircraft_id, api_client, auth_headers=None):
     """
     aircraft_page = AircraftPage(api_client)
 
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    # Preparar headers con autenticación
+    headers = {}
     if auth_headers:
         headers.update(auth_headers)
 
@@ -72,18 +52,23 @@ def id_aircraft_request(aircraft_id, api_client, auth_headers=None):
         response = aircraft_page.get_aircraft_by_id(aircraft_id, headers=headers)
         duration = time.time() - start_time
 
-        if response.status_code == 201:
+        # Logging según el resultado
+        if response.status_code == 200:
             try:
                 body = response.json()
-                preview = json.dumps(body, ensure_ascii=False)[:201]
+                preview = json.dumps(body, ensure_ascii=False)[:200]
             except Exception:
-                preview = response.text[:201]
+                preview = response.text[:200]
             logger.info(
                 f"[AIRCRAFT_GET_SUCCESS] id={aircraft_id} status={response.status_code} t={duration:.3f}s preview={preview}"
             )
+        elif response.status_code == 404:
+            logger.warning(
+                f"[AIRCRAFT_GET_NOT_FOUND] id={aircraft_id} status={response.status_code} t={duration:.3f}s"
+            )
         elif response.status_code == 422:
             logger.warning(
-                f"[AIRCRAFT_GET_NOT_FOUND] id={aircraft_id} status=404 t={duration:.3f}s"
+                f"[AIRCRAFT_GET_VALIDATION_ERROR] id={aircraft_id} status={response.status_code} t={duration:.3f}s"
             )
         else:
             try:
@@ -101,6 +86,7 @@ def id_aircraft_request(aircraft_id, api_client, auth_headers=None):
                 f"[AIRCRAFT_GET_ERROR] id={aircraft_id} status={response.status_code} t={duration:.3f}s detail={detail} body={body_repr}"
             )
         return response
+
     except Exception as e:
         duration = time.time() - start_time
         error_type = type(e).__name__
@@ -116,25 +102,32 @@ def id_aircraft_request(aircraft_id, api_client, auth_headers=None):
         }).encode('utf-8')
         return fake_response
 
-# Usar el fixture aircraft_id para obtener un ID válido
+
+# --- Tests parametrizados ---
+
 @pytest.mark.parametrize("scenario, expected_status", [
     ("valid", 200),
     ("not_found", 404),
-    ("invalid_type", 404),  # Ajustado a 404, ya que el backend devuelve 404 para IDs no numéricos
+    ("invalid_type", 404),
     ("negative_id", 404),
 ])
 def test_get_aircraft_by_id(scenario, expected_status, api_client, auth_headers, aircraft_id):
-    """Prueba parametrizada para GET /aircrafts/{aircraft_id}."""
+    """Prueba parametrizada para GET /aircrafts/{aircraft_id} usando POM."""
+
+    # Determinar el ID a usar según el escenario
     if scenario == "valid":
         aircraft_id_to_use = aircraft_id
     elif scenario == "not_found":
         aircraft_id_to_use = 999999999  # ID que no existe
     elif scenario == "invalid_type":
-        aircraft_id_to_use = "abcxyz"  # ID no numérico
+        aircraft_id_to_use = "abcxyz"   # ID no numérico
     elif scenario == "negative_id":
-        aircraft_id_to_use = -10  # ID negativo
+        aircraft_id_to_use = -10        # ID negativo
 
-    response = id_aircraft_request(aircraft_id_to_use, api_client, auth_headers)
+    # Ejecutar la prueba usando el helper
+    response = get_aircraft_by_id_request(aircraft_id_to_use, api_client, auth_headers)
+
+    # Verificar el resultado
     assert response.status_code == expected_status, (
         f"Fallo en el escenario {scenario}. Status esperado: {expected_status}, recibido: {response.status_code}."
     )

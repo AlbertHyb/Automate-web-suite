@@ -6,35 +6,34 @@ import time
 import traceback
 import json
 import requests
-
+from api.pages.aircraft_page import AircraftPage
 
 logger = logging.getLogger(__name__)
 
-class AircraftPage:
-    def __init__(self, api_client):
-        self.api_client = api_client
-        self.endpoint = "aircrafts"  # No dejar la URL completa ni visible
 
-    def create_aircraft(self, aircraft_data, headers):
-        return self.api_client.make_request(
-            method="POST",
-            endpoint=self.endpoint,
-            data=aircraft_data,
-            headers=headers
-        )
-
-    def list_aircrafts(self, headers):
-        return self.api_client.make_request(
-            method="GET",
-            endpoint=self.endpoint,
-            headers=headers
-        )
+def generate_random_tail_number():
+    """Genera un tail_number aleatorio de 5-10 caracteres usando solo letras y números."""
+    length = random.randint(5, 10)
+    # Usar letras y números para generar un tail_number válido
+    characters = string.ascii_uppercase + string.digits
+    return ''.join(random.choices(characters, k=length))
 
 
 def create_aircraft_request(aircraft_data, api_client, auth_headers=None):
+    """Helper para crear aviones usando el Page Object Model.
+
+    Args:
+        aircraft_data: Datos del avión (tail_number, model, capacity)
+        api_client: Instancia de ApiHelper
+        auth_headers: Headers de autenticación adicionales
+
+    Returns:
+        requests.Response: Respuesta de la API
+    """
     aircraft_page = AircraftPage(api_client)
-    # Headers básicos con autenticación
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+
+    # Preparar headers con autenticación
+    headers = {}
     if auth_headers:
         headers.update(auth_headers)
 
@@ -44,10 +43,9 @@ def create_aircraft_request(aircraft_data, api_client, auth_headers=None):
 
     try:
         response = aircraft_page.create_aircraft(aircraft_data, headers=headers)
-
         duration = time.time() - start_time
 
-        # Registrar la respuesta en el log con información detallada
+        # Logging según el resultado
         if response.status_code == 201:
             logger.info(
                 f"[AIRCRAFT_POST_SUCCESS] Modelo={model} | Status={response.status_code} | "
@@ -74,6 +72,7 @@ def create_aircraft_request(aircraft_data, api_client, auth_headers=None):
                     f"Respuesta no JSON: {response.text}"
                 )
         return response
+
     except Exception as e:
         duration = time.time() - start_time
         error_type = type(e).__name__
@@ -85,34 +84,19 @@ def create_aircraft_request(aircraft_data, api_client, auth_headers=None):
             f"Mensaje de error: {str(e)} | "
             f"Traza: {traceback.format_exc()}"
         )
-        # Crear una respuesta fallida similar a requests para mantener consistencia
-        fake_response = requests.Response()
-        fake_response.status_code = 500
-        fake_response._content = json.dumps({
-            "detail": str(e),
-            "error_type": error_type,
-            "endpoint": "aircrafts"
-        }).encode('utf-8')
-        return fake_response
 
 
-def generate_random_model():
-    # Crear un código aleatorio que respete el límite de 10 caracteres
-    # Formato: XX-NNNNN (donde X=letra, N=número)
-    prefix = ''.join(random.choices(string.ascii_uppercase, k=2))
-    suffix = ''.join(random.choices(string.digits, k=5))
-    return f"{prefix}-{suffix}"[:10]  # Asegurar que no exceda 10 caracteres
 
+# --- Tests parametrizados ---
 
 @pytest.mark.parametrize(
-    "test_id, priority, aircraft_data, expected_status, description",
+    "test_id, priority, aircraft_data_template, expected_status, description",
     [
         # Casos críticos
         (
             "AIRCRAFT_C001",
             "Critical",
             {
-                "tail_number": generate_random_model(),
                 "model": "Boeing",
                 "capacity": 200
             },
@@ -123,30 +107,27 @@ def generate_random_model():
             "AIRCRAFT_C002",
             "Critical",
             {
-                "tail_number": generate_random_model(),
                 "model": "Boeing",
-                "capacity": "xxx" #Se envian string´s
+                "capacity": "xxx"  # Se envían string's
             },
             422,
-            "Creación de avión con capacidad negativa"
+            "Creación de avión con capacidad inválida (string)"
         ),
         (
             "AIRCRAFT_C003",
             "Critical",
             {
-                "tail_number": generate_random_model(),
                 "model": "Boeing",
-                "capacity": "" #Capacidad vacía
+                "capacity": ""  # Capacidad vacía
             },
             422,
-            "Creación de avión con rango negativo"
+            "Creación de avión con capacidad vacía"
         ),
         # Caso de prioridad media
         (
             "AIRCRAFT_M001",
             "Medium",
             {
-                "tail_number": generate_random_model(),
                 "model": "Boeing",
                 # Falta capacity
             },
@@ -158,19 +139,27 @@ def generate_random_model():
             "AIRCRAFT_L001",
             "Low",
             {
-                "tail_number": "X" * 300,  # Modelo extremadamente largo
+                "tail_number": "X" * 300,  # tail_number extremadamente largo
                 "model": "Boeing",
                 "capacity": 200
             },
             422,
-            "Creación de avión con modelo extremadamente largo"
+            "Creación de avión con tail_number extremadamente largo"
         ),
     ]
 )
-def test_create_aircraft(test_id, priority, aircraft_data, expected_status, description, api_client, auth_headers):
+def test_create_aircraft(test_id, priority, aircraft_data_template, expected_status, description, api_client, auth_headers):
+    """Prueba parametrizada para POST /aircrafts usando POM."""
     logger.info(f"Ejecutando prueba {test_id}: {description} [Prioridad: {priority}]")
 
-    # Ejecutar la prueba
+    # Generar aircraft_data dinámicamente con tail_number único
+    aircraft_data = aircraft_data_template.copy()
+
+    # Solo generar tail_number si no está especificado en el template (para casos de prueba específicos)
+    if "tail_number" not in aircraft_data:
+        aircraft_data["tail_number"] = generate_random_tail_number()
+
+    # Ejecutar la prueba usando el helper
     start_time = time.time()
     response = create_aircraft_request(aircraft_data, api_client, auth_headers)
     duration = time.time() - start_time
@@ -190,7 +179,7 @@ def test_create_aircraft(test_id, priority, aircraft_data, expected_status, desc
             f"Datos enviados: {json.dumps(aircraft_data, indent=2, ensure_ascii=False)}"
         )
 
-    assert response.status_code == expected_status,  \
+    assert response.status_code == expected_status, \
         f"Se esperaba status {expected_status}, pero se recibió {response.status_code}. Respuesta: {response.text}"
 
     # Para casos exitosos, validamos la respuesta
@@ -212,6 +201,4 @@ def test_create_aircraft(test_id, priority, aircraft_data, expected_status, desc
         if "capacity" in aircraft_data and "capacity" in response_data:
             assert response_data["capacity"] == aircraft_data["capacity"], "La capacidad no coincide"
 
-
     logger.info(f"Prueba {test_id} completada con éxito")
-

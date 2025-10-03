@@ -8,9 +8,7 @@ from http import HTTPStatus
 import logging
 from api.tests.airports.list_airports import fetch_data
 from api.pages.flights_page import create_flight_request  # actualizado
-from api.tests.aircfrafts.create_aircraft import create_aircraft_request
-import time
-from api.tests.aircfrafts.create_aircraft import create_aircraft_request
+from api.tests.aircfrafts.create_aircraft import create_aircraft_request, generate_random_tail_number
 
 
 # =============================================================
@@ -363,14 +361,11 @@ def flight_positive_data(api_client, auth_headers, airport_test_data, resource_t
     }
     return search_params
 
-import time
-from api.tests.aircfrafts.create_aircraft import create_aircraft_request
-
 @pytest.fixture(scope="module")
 def aircraft_id(api_client, auth_headers):
     """Crea un avión y retorna su ID para pruebas dependientes."""
     payload = {
-        "tail_number": str(int(time.time() * 1000))[:10],  # Ajustar longitud máxima a 10 caracteres
+        "tail_number": generate_random_tail_number(),  # Usar función que respeta límites de 5-10 caracteres
         "model": "Boeing",
         "capacity": 180
     }

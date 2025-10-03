@@ -60,6 +60,97 @@ class FlightsAPI:
             self._log_exception("FLIGHT_GET_EXCEPTION", e, params, headers, duration)
             raise
 
+    def get_flight_by_id(self, flight_id: str, headers: Optional[Dict[str, str]] = None):
+        """Obtiene un vuelo por su ID.
+
+        Args:
+            flight_id: ID del vuelo
+            headers: Headers HTTP opcionales
+
+        Returns:
+            requests.Response: Respuesta de la API
+        """
+        start_time = time.time()
+        try:
+            endpoint_full = f"{self.endpoint}/{flight_id}"
+            response = self.api_client.make_request(
+                method="GET",
+                endpoint=endpoint_full,
+                data=None,
+                headers=headers or {"Accept": "application/json"}
+            )
+            duration = time.time() - start_time
+            if response.status_code == 200:
+                logger.info(f"[FLIGHTS_GET_BY_ID_SUCCESS] ID={flight_id} Status={response.status_code} Duración={duration:.3f}s")
+            else:
+                self._log_error("FLIGHTS_GET_BY_ID_ERROR", response, {"flight_id": flight_id}, headers, duration)
+            return response
+        except Exception as e:
+            duration = time.time() - start_time
+            self._log_exception("FLIGHTS_GET_BY_ID_EXCEPTION", e, {"flight_id": flight_id}, headers, duration)
+            raise
+
+    def update_flight(self, flight_id: str, flight_data: Dict[str, Any], headers: Optional[Dict[str, str]] = None):
+        """Actualiza un vuelo existente.
+
+        Args:
+            flight_id: ID del vuelo a actualizar
+            flight_data: Nuevos datos del vuelo
+            headers: Headers HTTP opcionales
+
+        Returns:
+            requests.Response: Respuesta de la API
+        """
+        start_time = time.time()
+        try:
+            endpoint_full = f"{self.endpoint}/{flight_id}"
+            response = self.api_client.make_request(
+                method="PUT",
+                endpoint=endpoint_full,
+                data=flight_data,
+                headers=headers or {"Content-Type": "application/json", "Accept": "application/json"}
+            )
+            duration = time.time() - start_time
+            if response.status_code == 200:
+                logger.info(f"[FLIGHTS_PUT_SUCCESS] ID={flight_id} Status={response.status_code} Duración={duration:.3f}s")
+            else:
+                self._log_error("FLIGHTS_PUT_ERROR", response, flight_data, headers, duration)
+            return response
+        except Exception as e:
+            duration = time.time() - start_time
+            self._log_exception("FLIGHTS_PUT_EXCEPTION", e, flight_data, headers, duration)
+            raise
+
+    def delete_flight(self, flight_id: str, headers: Optional[Dict[str, str]] = None):
+        """Elimina un vuelo.
+
+        Args:
+            flight_id: ID del vuelo a eliminar
+            headers: Headers HTTP opcionales
+
+        Returns:
+            requests.Response: Respuesta de la API
+        """
+        start_time = time.time()
+        try:
+            endpoint_full = f"{self.endpoint}/{flight_id}"
+            response = self.api_client.make_request(
+                method="DELETE",
+                endpoint=endpoint_full,
+                data=None,
+                headers=headers or {"Accept": "application/json"}
+            )
+            duration = time.time() - start_time
+            if response.status_code in [200, 204]:
+                logger.info(f"[FLIGHTS_DELETE_SUCCESS] ID={flight_id} Status={response.status_code} Duración={duration:.3f}s")
+            else:
+                self._log_error("FLIGHTS_DELETE_ERROR", response, {"flight_id": flight_id}, headers, duration)
+            return response
+        except Exception as e:
+            duration = time.time() - start_time
+            self._log_exception("FLIGHTS_DELETE_EXCEPTION", e, {"flight_id": flight_id}, headers, duration)
+            raise
+
     def _log_error(self, tag: str, response, data, headers, duration: float):
         try:
             body = response.json()
@@ -91,3 +182,26 @@ def search_flight_request(search_params, api_client, auth_headers=None):
         headers.update(auth_headers)
     return flights_api.search_flight(params=search_params, headers=headers)
 
+def get_flight_by_id_request(flight_id, api_client, auth_headers=None):
+    """Helper para obtener un vuelo por ID."""
+    flights_api = FlightsAPI(api_client)
+    headers = {"Accept": "application/json"}
+    if auth_headers:
+        headers.update(auth_headers)
+    return flights_api.get_flight_by_id(flight_id, headers=headers)
+
+def update_flight_request(flight_id, flight_data, api_client, auth_headers=None):
+    """Helper para actualizar un vuelo."""
+    flights_api = FlightsAPI(api_client)
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    if auth_headers:
+        headers.update(auth_headers)
+    return flights_api.update_flight(flight_id, flight_data, headers=headers)
+
+def delete_flight_request(flight_id, api_client, auth_headers=None):
+    """Helper para eliminar un vuelo."""
+    flights_api = FlightsAPI(api_client)
+    headers = {"Accept": "application/json"}
+    if auth_headers:
+        headers.update(auth_headers)
+    return flights_api.delete_flight(flight_id, headers=headers)
