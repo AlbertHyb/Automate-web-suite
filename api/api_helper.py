@@ -43,16 +43,6 @@ class ApiHelper:
         })
 
     def is_service_up(self, max_attempts: int = 3, delay: int = 2) -> bool:
-        """
-        Verifica si el servicio API está disponible.
-
-        Args:
-            max_attempts: Número de intentos
-            delay: Segundos entre intentos
-
-        Returns:
-            bool: True si el servicio responde
-        """
         endpoints_to_check = ['/docs', '/health', '/']
 
         for attempt in range(max_attempts):
@@ -70,13 +60,11 @@ class ApiHelper:
                     logger.debug(
                         "Intento %d/%d en %s falló: %s",
                         attempt + 1, max_attempts, endpoint, e)
-                
 
             if attempt < max_attempts - 1:
                 logger.warning(
                     "Servicio no disponible, reintentando en %ss...", delay)
                 time.sleep(delay)
-                
 
         logger.error(
             "Servicio API no disponible después de todos los intentos")
@@ -210,7 +198,8 @@ class ApiHelper:
             # Validar status code si se especificó
             if expected_status is not None:
                 assert response.status_code == expected_status, \
-                    "Expected status %s, got %s. Response: %s" % (expected_status, response.status_code, response.text)
+                    "Expected status %s, got %s. Response: %s" % (
+                        expected_status, response.status_code, response.text)
 
             return response
 
@@ -231,7 +220,7 @@ class ApiHelper:
             error_msg = "Error inesperado en %s: %s"
             logger.error(error_msg, url, str(e))
             raise RuntimeError(error_msg % (url, str(e))) from e
-        
+
     def get(self, endpoint: str, params: Optional[Dict] = None, **kwargs) -> requests.Response:
         """Realiza una petición GET."""
         return self.make_request(endpoint, method="GET", data=params, **kwargs)
@@ -261,29 +250,19 @@ class ApiHelper:
         return self.get("docs")
 
     def validate_response_schema(self, response: requests.Response, schema: Dict) -> bool:
-        """
-        Valida que la respuesta coincida con un schema esperado.
-
-        Args:
-            response: Respuesta de la API
-            schema: Schema esperado (dict con estructura)
-
-        Returns:
-            bool: True si coincide
-        """
+    
         try:
             data = response.json()
         except (ValueError, requests.exceptions.JSONDecodeError) as e:
             logger.error("Respuesta no es JSON válido: %s", e)
             return False
-            
-           
+
         for key in schema.keys():
             if key not in data:
                 logger.error("Campo '%s' faltante en respuesta", key)
                 return False
-            
-        return True    
+
+        return True
 
     def close(self):
         """Cierra la sesión HTTP."""
