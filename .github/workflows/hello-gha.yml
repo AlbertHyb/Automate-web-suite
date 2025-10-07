@@ -1,15 +1,38 @@
 name: Pruebas unitarias en python
 run-name: Pruebas unitarias
-on: [push]
-jobs:
-   python-unit-tests:
-      runs-on: ubuntu-latest
-      steps:
-          - name: Checkout
-            uses: actions/checkout@v3
-          - name: Crear una variable
-            run: echo "USERNAME=${{ github.actor}}" >> $GITHUB_ENV
-          - name: Ejecutar script de python
-            run: python hola_gha.py   
+on: [push, pull_request]
 
-         
+jobs:
+  python-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Crear una variable
+        run: echo "USERNAME=${{ github.actor}}" >> $GITHUB_ENV
+
+      - name: Ejecutar script de saludo
+        run: python api/tests/hola_gha.py
+
+      - name: Run unit tests
+        run: pytest api/tests/ -v
+
+      - name: Generate test report
+        run: pytest api/tests/ --html=reports/test_report.html --self-contained-html
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-report
+          path: reports/test_report.html
