@@ -1,141 +1,144 @@
 name: CI Tests Suite
 
 on:
-    push:
-        branches: ["main", "gha-prueba"]
-    pull_request:
-        branches: ["main"]
-    workflow_dispatch:
-    schedule:
-        - cron: "0 4 * * *" # Ejecutar diariamente a las 4:00 AM UTC
+  push:
+    branches: ["main", "gha-prueba"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *" # Ejecutar diariamente a las 4:00 AM UTC
 
 permissions:
-    contents: read
-    actions: read
+  contents: read
+  actions: read
 
 concurrency:
-    group: ci-${{ github.ref }}
-    cancel-in-progress: true
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                python-version: [3.11, 3.12]
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11, 3.12]
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v4
-              with:
-                  python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-            - name: Cache pip dependencies
-              uses: actions/cache@v4
-              with:
-                  path: ~/.cache/pip
-                  key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.tx') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pip-
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r requirements.tx
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-            - name: Create reports directory
-              run: mkdir -p reports
+      - name: Create reports directory
+        run: mkdir -p reports
 
-            - name: Create logs directory
-              run: mkdir -p logs
+      - name: Create logs directory
+        run: mkdir -p logs
 
-            - name: Run API tests
-              run: |
-                  pytest api/tests/ \
-                    --html=reports/report_${{ github.run_number }}.html \
-                    --self-contained-html \
-                    --junitxml=reports/junit.xml \
-                    --cov=api \
-                    --cov-report=html:reports/coverage \
-                    --cov-report=xml:reports/coverage.xml \
-                    -v \
-                    --tb=short
-              env:
-                  BASE_URL: https://cf-automation-airline-api.onrender.com
-                  ENVIRONMENT: test
+      - name: Run API tests
+        run: |
+          pytest api/tests/ \
+            --html=reports/report_${{ github.run_number }}.html \
+            --self-contained-html \
+            --junitxml=reports/junit.xml \
+            --cov=api \
+            --cov-report=html:reports/coverage \
+            --cov-report=xml:reports/coverage.xml \
+            -v \
+            --tb=short
+        env:
+          BASE_URL: https://cf-automation-airline-api.onrender.com
+          ENVIRONMENT: test
 
-            - name: Upload test results
-              uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: test-results-${{ matrix.python-version }}
-                  path: |
-                      reports/
-                      logs/
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: |
+            reports/
+            logs/
 
-            - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: coverage-reports-${{ matrix.python-version }}
-                  path: reports/coverage/
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports-${{ matrix.python-version }}
+          path: reports/coverage/
 
-    security-scan:
-        runs-on: ubuntu-latest
-        needs: test
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-            - name: Install security tools
-              run: |
-                  pip install bandit safety
+      - name: Install security tools
+        run: |
+          pip install bandit safety
 
-            - name: Run Bandit security scan
-              run: |
-                  bandit -r api/ -f json -o reports/bandit-report.json || true
-                  bandit -r api/ -f txt -o reports/bandit-report.txt || true
+      - name: Create reports directory
+        run: mkdir -p reports
 
-            - name: Run Safety check
-              run: |
-                  safety check --json --output reports/safety-report.json || true
-                  safety check --output reports/safety-report.txt || true
+      - name: Run Bandit security scan
+        run: |
+          bandit -r api/ -f json -o reports/bandit-report.json || true
+          bandit -r api/ -f txt -o reports/bandit-report.txt || true
 
-            - name: Upload security reports
-              uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: security-reports
-                  path: reports/
+      - name: Run Safety check
+        run: |
+          safety check --json --output reports/safety-report.json || true
+          safety check --output reports/safety-report.txt || true
 
-    lint:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports
+          path: reports/
 
-            - name: Set up Python
-              uses: actions/setup-python@v4
-              with:
-                  python-version: 3.11
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Install linting tools
-              run: |
-                  pip install flake8 black isort
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-            - name: Run Black formatter check
-              run: black --check --diff api/
+      - name: Install linting tools
+        run: |
+          pip install flake8 black isort
 
-            - name: Run isort import sorting check
-              run: isort --check-only --diff api/
+      - name: Run Black formatter check
+        run: black --check --diff api/
 
-            - name: Run Flake8 linter
-              run: flake8 api/ --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: Run isort import sorting check
+        run: isort --check-only --diff api/
+
+      - name: Run Flake8 linter
+        run: flake8 api/ --count --select=E9,F63,F7,F82 --show-source --statistics

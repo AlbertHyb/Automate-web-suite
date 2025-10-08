@@ -112,73 +112,22 @@ Automate-web-suite/
 
 ## Ejecución de Pruebas
 
-### **Pruebas de API (Pytest)**
+Las pruebas se ejecutan automáticamente en GitHub Actions cuando se hace push a las ramas `main` o `gha-prueba`, o cuando se crea un Pull Request.
 
-#### Todas las pruebas de API:
-```bash
-pytest api/tests/ -v
-```
+### **Pipeline de CI/CD**
 
-### Pruebas específicas:
-```bash
-# Autenticación
-pytest api/tests/auth_login.py -v
-pytest api/tests/auth_signup.py -v
+El pipeline incluye:
+- **Pruebas de API**: Ejecutadas con Pytest en Python 3.11 y 3.12
+- **Análisis de seguridad**: Bandit y Safety
+- **Análisis de calidad**: Black, isort y Flake8
+- **Generación de reportes**: HTML, JUnit XML y cobertura de código
 
-# Gestión de usuarios
-pytest api/tests/user_update_put.py -v
-pytest api/tests/user_me_get.py -v
+### **Monitoreo de Estado**
 
-# Aeropuertos
-pytest api/tests/list_airports.py -v
-```
-
-#### Generar reporte HTML:
-```bash
-pytest api/tests/ --html=reports/api_report.html --self-contained-html
-```
-
-#### Ejecutar tests con marcadores:
-```bash
-pytest -m "smoke" -v              # Solo pruebas básicas
-pytest -m "integration" -v        # Pruebas de integración
-pytest -m "api" -v                # Solo pruebas de API
-```
-
-### **Pruebas de UI (Behave)**
-
-#### Ejecutar todas las pruebas BDD:
-```bash
-behave features/
-```
-
-#### Ejecutar escenarios específicos:
-```bash
-behave features/login.feature
-```
-
-#### Ejecutar con tags específicos:
-```bash
-behave --tags=@smoke
-behave --tags=@login
-```
-
-#### Generar reporte detallado:
-```bash
-behave -f html -o reports/behave_report.html features/
-```
-
-### **Scripts de Debugging**
-
-#### Monitorear estado de la API:
-```bash
-python debug_api_status.py
-```
-
-#### Ejecutar tests con mocks (cuando API esté caída):
-```bash
-pytest api/tests/user_update_put_mock.py -v
-```
+Para verificar el estado de las pruebas:
+1. Ve a la pestaña "Actions" en GitHub
+2. Revisa el estado del último workflow
+3. Descarga los artefactos para ver reportes detallados
 
 ## Escenarios de Prueba
 
@@ -262,74 +211,55 @@ PAGE_LOAD_TIMEOUT=30
 
 ## Debugging y Troubleshooting
 
-### **Problemas Comunes de API**
-```bash
-# Verificar estado de la API
-python debug_api_status.py
+### **Problemas Comunes**
 
-# Ejecutar tests con logs detallados
-pytest api/tests/ -v -s --tb=long
+1. **Fallo en el pipeline de GitHub Actions**:
+   - Revisa los logs en la pestaña "Actions"
+   - Verifica que la API esté disponible
+   - Revisa los reportes de seguridad y linting
 
-# Usar tests mock cuando API esté caída
-pytest api/tests/*_mock.py -v
-```
+2. **Problemas de conectividad con la API**:
+   - Verifica que `https://cf-automation-airline-api.onrender.com` esté disponible
+   - Revisa los logs del workflow para errores de conexión
 
-### **Problemas Comunes de UI**
-```bash
-# Verificar WebDriver
-python -c "from utils.driver_factory import create_driver; driver = create_driver(); print('WebDriver OK'); driver.quit()"
-
-# Ejecutar en modo debug
-behave features/ --no-capture
-
-# Ejecutar con tags específicos
-behave --tags=@debug features/
-```
+3. **Fallo en análisis de código**:
+   - Revisa los reportes de Black, isort y Flake8
+   - Corrige los problemas de formato y estilo
 
 ## Reportes
 
-### **Reportes de Pytest**
-- **HTML**: `reports/api_report.html`
-- **JUnit XML**: Compatible con CI/CD
-- **Allure**: Soporte para reportes avanzados
+Los reportes se generan automáticamente en GitHub Actions y están disponibles como artefactos:
 
-### **Reportes de Behave**
-- **HTML**: `reports/behave_report.html`
-- **JSON**: Para integración con herramientas externas
-- **Plain text**: Para logs y debugging
+### **Reportes de Pruebas**
+- **HTML**: `reports/report_{run_number}.html`
+- **JUnit XML**: `reports/junit.xml`
+- **Cobertura**: `reports/coverage/`
+
+### **Reportes de Seguridad**
+- **Bandit**: `reports/bandit-report.{json,txt}`
+- **Safety**: `reports/safety-report.{json,txt}`
+
+### **Acceso a Reportes**
+1. Ve a la pestaña "Actions" en GitHub
+2. Selecciona el workflow que deseas revisar
+3. Descarga los artefactos correspondientes
 
 ## Integración Continua
 
-### **GitHub Actions Example**
+### **Configuración del Pipeline**
+
+El pipeline está configurado en `.github/workflows/suit_tests.yml` e incluye:
+
+- **Triggers**: Push a `main`/`gha-prueba`, Pull Requests, ejecución manual y programada
+- **Versiones de Python**: 3.11 y 3.12
+- **Jobs**: Pruebas, análisis de seguridad y linting
+- **Artefactos**: Reportes HTML, JUnit XML y cobertura de código
+
+### **Configuración de Variables de Entorno**
 ```yaml
-name: Tests
-on: [push, pull_request]
-jobs:
-  api-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run API tests
-        run: pytest api/tests/ -v
-  
-  ui-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run UI tests
-        run: behave features/
+env:
+  BASE_URL: https://cf-automation-airline-api.onrender.com
+  ENVIRONMENT: test
 ```
 
 ## Contribución
