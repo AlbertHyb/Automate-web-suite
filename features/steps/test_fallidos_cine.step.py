@@ -60,5 +60,5 @@ def step_validate_search_field(context):
         timestamp = time.strftime("%Y%m%d-%H%M%S")
         screenshot_path = os.path.join(os.getcwd(), f"error_no_search_{timestamp}.png")
         context.driver.save_screenshot(screenshot_path)
-        print(f"📸 Screenshot guardada en: {screenshot_path}")
+        print(f" Screenshot guardada en: {screenshot_path}")
         raise AssertionError(" No se mostró ningún campo de búsqueda después de hacer clic en el botón.")

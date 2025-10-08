@@ -106,24 +106,24 @@ def step_impl(context, cantidadGente):
     from selenium.webdriver.support import expected_conditions as EC
     import time
 
-    print(f"\n🎟️ Iniciando selección de boletos con cantidades: {cantidadGente}")
+    print(f"\n Iniciando selección de boletos con cantidades: {cantidadGente}")
 
     wait = WebDriverWait(context.driver, 10)
 
     # Esperar que aparezca el modal (role="dialog")
-    print("⏳ Esperando que aparezca el modal de selección de boletos...")
+    print(" Esperando que aparezca el modal de selección de boletos...")
     modal = wait.until(
         EC.presence_of_element_located((By.XPATH, "//div[@role='dialog']"))
     )
-    print("✅ Modal detectado correctamente.")
+    print(" Modal detectado correctamente.")
 
     # Dividir las cantidades: niños, adultos, adultos mayores
     try:
         ninos, adultos, mayores = [int(x.strip()) for x in cantidadGente.split(',')]
     except Exception as e:
-        raise AssertionError(f"❌ Error al interpretar las cantidades '{cantidadGente}': {e}")
+        raise AssertionError(f" Error al interpretar las cantidades '{cantidadGente}': {e}")
 
-    print(f"👶 Niños: {ninos}, 👨 Adultos: {adultos}, 👴 Adultos mayores: {mayores}")
+    print(f" Niños: {ninos},  Adultos: {adultos},  Adultos mayores: {mayores}")
 
     # Localizadores por ID
     campos = {
@@ -139,10 +139,10 @@ def step_impl(context, cantidadGente):
             context.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", campo)
             campo.clear()
             campo.send_keys(str(valor))
-            print(f"✅ Campo '{campo_id}' actualizado con valor {valor}.")
+            print(f" Campo '{campo_id}' actualizado con valor {valor}.")
             time.sleep(0.3)
         except Exception as e:
-            raise AssertionError(f"❌ No se pudo llenar el campo '{campo_id}': {e}")
+            raise AssertionError(f" No se pudo llenar el campo '{campo_id}': {e}")
 
     # Confirmar
     try:
@@ -150,9 +150,9 @@ def step_impl(context, cantidadGente):
             EC.element_to_be_clickable((By.XPATH, "//button[contains(.,'Confirmar')]"))
         )
         boton_confirmar.click()
-        print("🎯 Clic en 'Confirmar' realizado correctamente ✅")
+        print(" Clic en 'Confirmar' realizado correctamente ")
     except Exception as e:
-        raise AssertionError(f"❌ Error al hacer clic en Confirmar: {e}")
+        raise AssertionError(f" Error al hacer clic en Confirmar: {e}")
 
 
 
@@ -163,7 +163,7 @@ def step_impl(context):
     from selenium.webdriver.support import expected_conditions as EC
     import time
 
-    print("\n💳 Intentando proceder al pago...")
+    print("\n Intentando proceder al pago...")
 
     wait = WebDriverWait(context.driver, 10)
 
@@ -175,14 +175,14 @@ def step_impl(context):
         context.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", boton_pago)
         time.sleep(0.5)
         boton_pago.click()
-        print("✅ Se hizo clic en 'Proceder al pago'.")
+        print(" Se hizo clic en 'Proceder al pago'.")
     except Exception as e:
-        raise AssertionError(f"❌ No se pudo hacer clic en 'Proceder al pago': {e}")
+        raise AssertionError(f" No se pudo hacer clic en 'Proceder al pago': {e}")
 
     # --- Paso 2: Esperar el formulario ---
     print("⏳ Esperando el formulario de pago...")
     wait.until(EC.presence_of_element_located((By.ID, "firstName")))
-    print("✅ Formulario detectado.")
+    print(" Formulario detectado.")
 
     # --- Paso 3: Completar el formulario ---
     campos = {
@@ -199,10 +199,10 @@ def step_impl(context):
             campo = wait.until(EC.presence_of_element_located((By.ID, campo_id)))
             campo.clear()
             campo.send_keys(valor)
-            print(f"📝 Campo '{campo_id}' completado con '{valor}'.")
+            print(f" Campo '{campo_id}' completado con '{valor}'.")
             time.sleep(0.3)
         except Exception as e:
-            raise AssertionError(f"❌ No se pudo llenar el campo '{campo_id}': {e}")
+            raise AssertionError(f" No se pudo llenar el campo '{campo_id}': {e}")
 
     # --- Paso 4: Confirmar pago ---
     try:
@@ -212,9 +212,9 @@ def step_impl(context):
         context.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", boton_confirmar)
         time.sleep(0.5)
         boton_confirmar.click()
-        print("🎯 Clic en 'Confirmar pago' realizado correctamente ✅")
+        print(" Clic en 'Confirmar pago' realizado correctamente ")
     except Exception as e:
-        raise AssertionError(f"❌ Error al confirmar el pago: {e}")
+        raise AssertionError(f" Error al confirmar el pago: {e}")
 
     # --- Paso 5: Confirmar que el pago fue exitoso ---
     try:
@@ -222,14 +222,14 @@ def step_impl(context):
         mensaje = wait.until(
             EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Pago exitoso') or contains(text(),'Gracias')]"))
         )
-        print(f"🎉 Pago completado: {mensaje.text}")
+        print(f" Pago completado: {mensaje.text}")
     except:
-        print("⚠️ No se encontró mensaje de confirmación (puede no estar implementado aún).")
+        print(" No se encontró mensaje de confirmación (puede no estar implementado aún).")
 
 
 @then('el pago debe completarse exitosamente')
 def step_impl(context):
-    print("\n🧾 Validando mensaje de confirmación de pago...")
+    print("\n Validando mensaje de confirmación de pago...")
 
     wait = WebDriverWait(context.driver, 10)
     try:
@@ -237,6 +237,6 @@ def step_impl(context):
             EC.presence_of_element_located((By.XPATH, "//h1[contains(text(),'¡Pago completado!')]"))
         )
         assert titulo.is_displayed(), "El mensaje '¡Pago completado!' no está visible."
-        print("✅ Validación exitosa: ¡Pago completado! está visible en la pantalla.")
+        print(" Validación exitosa: ¡Pago completado! está visible en la pantalla.")
     except Exception as e:
-        raise AssertionError(f"❌ No se encontró el mensaje de '¡Pago completado!': {e}")
+        raise AssertionError(f" No se encontró el mensaje de '¡Pago completado!': {e}")
