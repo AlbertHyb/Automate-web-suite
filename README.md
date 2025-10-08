@@ -55,60 +55,6 @@ pip install -r requirements.txt
 - Crea un archivo `.env` en la raíz del proyecto
 - Agrega las siguientes variables:
 
-```
-# Configuración de API
-ADMIN_USER=admin@admin.com
-ADMIN_PASS=admin
-API_PROTOCOL=https
-API_HOST=cf-automation-airline-api.onrender.com
-API_BASE_PATH=/
-API_VERSION=
-SIGNUP_STATUS_EMAIL=test_status_check@gmail.com
-SIGNUP_STATUS_PASS=Test1234!
-SIGNUP_STATUS_NAME=Status Check
-
-# Configuración de UI
-BASE_URL=https://fake-cinema-v0.onrender.com
-BROWSER=chrome
-HEADLESS=false
-```
-
-> **Nota:** El archivo `.env` está en `.gitignore` y no debe subirse al repositorio.
-
-## Estructura del Proyecto
-```
-Automate-web-suite/
-├── api/                          # Pruebas de API
-│   ├── api_helper.py            # Cliente HTTP helper
-│   ├── schemas/                 # Esquemas de validación JSON
-│   │   ├── login_schemas.py
-│   │   ├── signup_schemas.py
-│   │   ├── user_update_put_schema.py
-│   │   └── airport_schemas.py
-│   └── tests/                   # Tests de API con Pytest
-│       ├── conftest.py         # Configuración de fixtures
-│       ├── auth_login.py       # Tests de autenticación
-│       ├── auth_signup.py      # Tests de registro
-│       ├── user_update_put.py  # Tests de actualización de usuarios
-│       ├── test_airports.py    # Tests de aeropuertos
-│       └── ...
-├── features/                    # Pruebas BDD con Behave
-│   ├── login.feature           # Scenarios de login en Gherkin
-│   ├── environment.py          # Configuración de Behave
-│   └── steps/                  # Implementación de steps
-│       └── test_login_steps.py
-├── pages/                      # Page Object Model
-│   └── base_page.py           # Clase base para páginas
-├── utils/                      # Utilidades compartidas
-│   ├── driver_factory.py      # Factory para WebDrivers
-│   └── conftest.py
-├── config/                     # Configuración centralizada
-│   └── settings.py
-├── debug_api_status.py         # Script de monitoreo de API
-├── pytest.ini                 # Configuración de Pytest
-├── requirements.txt
-└── README.md
-```
 
 ## Ejecución de Pruebas
 
@@ -157,23 +103,6 @@ Para verificar el estado de las pruebas:
 - Manejo de duplicados
 - Actualizaciones y eliminaciones
 
-###  **UI Testing (BDD)**
-
-#### **Navegación Web**
-```gherkin
-Feature: Acceso al sitio Fake Cinema
-
-  Scenario: El usuario abre la página principal
-    Given que el usuario abre el navegador
-    When accede a la página de inicio
-    Then la página debería cargar con el título correcto
-```
-
-#### **Características de los Tests BDD:**
-- **Page Object Model** - Patrón de diseño para mantenibilidad
-- **Driver Factory** - Soporte para múltiples navegadores (Chrome, Firefox, Edge)
-- **Configuración flexible** - Modo headless y configuración por variables de entorno
-- **Hooks de Behave** - Setup y teardown automático de navegadores
 
 ## Configuración Avanzada
 
@@ -190,24 +119,6 @@ markers =
     ui: pruebas de interfaz de usuario
 ```
 
-### **Behave Configuration**
-- **environment.py** - Configuración de hooks y setup
-- **Driver Factory** - Creación automática de WebDrivers
-- **Base Page** - Clase base con métodos comunes de UI
-
-### **Variables de Entorno Soportadas**
-```bash
-# API
-BASE_URL=https://cf-automation-airline-api.onrender.com
-ADMIN_USER=admin@admin.com
-ADMIN_PASS=admin
-
-# UI
-BROWSER=chrome|firefox|edge
-HEADLESS=true|false
-IMPLICIT_WAIT=10
-PAGE_LOAD_TIMEOUT=30
-```
 
 ## Debugging y Troubleshooting
 
@@ -270,24 +181,6 @@ env:
 3. Usar fixtures de `conftest.py`
 4. Seguir convenciones de naming: `test_*.py`
 
-### **Para Tests de UI**
-1. Crear features en `features/*.feature`
-2. Implementar steps en `features/steps/`
-3. Usar Page Object Model en `pages/`
-4. Seguir sintaxis Gherkin para scenarios
-
-### **Proceso de Contribución**
-1. Fork del repositorio
-2. Crear rama feature: `git checkout -b feature/nueva-caracteristica`
-3. Agregar tests y documentación
-4. Commit: `git commit -m 'feat: descripción de la característica'`
-5. Push: `git push origin feature/nueva-caracteristica`
-6. Crear Pull Request
-
-## Licencia
-MIT License - Ver archivo LICENSE para más detalles
-
----
 
 ## Recursos Adicionales
 
