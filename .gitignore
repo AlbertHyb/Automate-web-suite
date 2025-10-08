@@ -22,7 +22,9 @@ var/
 
 # Virtual Environment
 venv/
-.env
+.new
+.venv
+
 
 # IDE
 .idea/
@@ -38,3 +40,6 @@ htmlcov/
 
 # Logs
 *.log
+
+Credentials/
+.env

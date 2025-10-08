@@ -112,7 +112,7 @@ Automate-web-suite/
 
 ## Ejecución de Pruebas
 
-### 🔌 **Pruebas de API (Pytest)**
+### **Pruebas de API (Pytest)**
 
 #### Todas las pruebas de API:
 ```bash
@@ -182,31 +182,31 @@ pytest api/tests/user_update_put_mock.py -v
 
 ## Escenarios de Prueba
 
-### 🔌 **API Testing**
+### **API Testing**
 
 #### **Autenticación**
-- ✅ Login exitoso con credenciales válidas
-- ❌ Login con credenciales inválidas
-- ❌ Login con campos faltantes
-- ❌ Login con formatos incorrectos
+- Login exitoso con credenciales válidas
+- Login con credenciales inválidas
+- Login con campos faltantes
+- Login con formatos incorrectos
 
 #### **Registro de Usuarios**
-- ✅ Registro exitoso con datos válidos
-- ❌ Registro con email duplicado
-- ❌ Registro con formato de email inválido
-- ❌ Registro con contraseña débil
+- Registro exitoso con datos válidos
+- Registro con email duplicado
+- Registro con formato de email inválido
+- Registro con contraseña débil
 
 #### **Gestión de Usuarios**
-- ✅ Actualización de perfil de usuario (PUT /users/{id})
-- ✅ Obtener información del usuario actual (GET /users/me)
-- ✅ Listar usuarios (GET /users)
-- ✅ Creación de usuarios por admin
+- Actualización de perfil de usuario (PUT /users/{id})
+- Obtener información del usuario actual (GET /users/me)
+- Listar usuarios (GET /users)
+- Creación de usuarios por admin
 
 #### **Gestión de Aeropuertos**
-- ✅ Creación de aeropuertos
-- ✅ Validación de códigos IATA
-- ✅ Manejo de duplicados
-- ✅ Actualizaciones y eliminaciones
+- Creación de aeropuertos
+- Validación de códigos IATA
+- Manejo de duplicados
+- Actualizaciones y eliminaciones
 
 ###  **UI Testing (BDD)**
 
@@ -354,12 +354,12 @@ jobs:
 5. Push: `git push origin feature/nueva-caracteristica`
 6. Crear Pull Request
 
-## 📝 Licencia
+## Licencia
 MIT License - Ver archivo LICENSE para más detalles
 
 ---
 
-## 📚 Recursos Adicionales
+## Recursos Adicionales
 
 - **Pytest Documentation**: https://docs.pytest.org/
 - **Behave Documentation**: https://behave.readthedocs.io/

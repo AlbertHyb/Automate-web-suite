@@ -39,7 +39,8 @@ class ApiHelper:
         # Headers por defecto
         self.session.headers.update({
             'User-Agent': 'AutomateWebSuite-API-Tests/1.0',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
         })
 
     def is_service_up(self, max_attempts: int = 3, delay: int = 2) -> bool:
